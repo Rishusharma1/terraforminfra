@@ -1,5 +1,15 @@
 provider "aws" {
   region = "us-east-1"
-  # access_key = "AKIAVYN75FK2FLQ7HVUL"
-  # secret_key = "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"
+
+}
+
+terraform {
+  backend "s3" {
+    bucket = "mubucketstate"
+    dynamodb_table = "my-DynamoDB"
+    key = "terraform.tfstate"
+    region = "us-east-1"
+    encrypt = true
+    
+  }
 }
