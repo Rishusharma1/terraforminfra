@@ -1,0 +1,216 @@
+#VPC creation
+
+resource "aws_vpc" "vpc" {
+  cidr_block           = "192.168.0.0/16"
+  enable_dns_support   = "true"
+  enable_dns_hostnames = "true"
+  instance_tenancy     = "default"
+
+  tags = {
+    Name = "ninja-vpc-01"
+  }
+}
+
+# Private subnet
+
+resource "aws_subnet" "prisub0" {
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = "192.168.2.0/24"
+  availability_zone = "ap-south-1b"
+
+  tags = {
+    Name = "ninja-priv-sub-01"
+  }
+}
+
+resource "aws_subnet" "prisub1" {
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = "192.168.4.0/24"
+  availability_zone = "ap-south-1a"
+
+  tags = {
+    Name = "ninja-priv-sub-02"
+  }
+}
+
+# Public subnet
+
+resource "aws_subnet" "pubsub0" {
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = "192.168.1.0/24"
+  availability_zone = "ap-south-1b"
+
+  tags = {
+    Name = "ninja-pub-sub-01"
+  }
+}
+
+resource "aws_subnet" "pubsub1" {
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = "192.168.6.0/24"
+  availability_zone = "ap-south-1a"
+
+  tags = {
+    Name = "ninja-pub-sub-02"
+  }
+}
+
+# Elastic IP
+
+resource "aws_eip" "elasticip" {
+  domain = "vpc"
+}
+
+# NAT Gateway
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.elasticip.id
+  subnet_id = aws_subnet.pubsub0.id
+
+  tags = {
+    Name = "ninja-nat-01"
+  }
+}
+
+resource "aws_internet_gateway" "intgw" {
+  vpc_id = aws_vpc.vpc.id
+  tags = {
+    Name = "ninja-igw-01"
+  }
+}
+
+# Rouing Table
+
+resource "aws_route_table" "route-table" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Name = "ninja-route-pub-01"
+  }
+}
+
+
+resource "aws_route" "rt" {
+  route_table_id         = aws_route_table.route-table.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.intgw.id
+}
+
+resource "aws_route_table_association" "rta" {
+  subnet_id      = aws_subnet.pubsub0.id
+  route_table_id = aws_route_table.route-table.id
+}
+
+resource "aws_route_table" "ngw-rt" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Name = "natgw-rt"
+  }
+}
+
+resource "aws_route" "r2" {
+  route_table_id         = aws_route_table.ngw-rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_nat_gateway.nat.id
+}
+
+resource "aws_route_table_association" "rta2" {
+  subnet_id      = aws_subnet.prisub0.id
+  route_table_id = aws_route_table.ngw-rt.id
+}
+
+# SG for public instance
+resource "aws_security_group" "bastion-sg" {
+  name        = "T-pub-SG"
+  description = "Allow inbound traffic to bastion"
+  vpc_id      = aws_vpc.vpc.id
+
+  ingress {
+    description = "ssh"
+    from_port   = 0
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks  = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "http"
+    from_port   = 0
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks  = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port  = 0
+    to_port    = 0
+    protocol   = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = {
+    Name = "bastion"
+  }
+}
+
+# BASTION server
+
+resource "aws_instance" "bastion-ins" {
+  ami            = "ami-0f5ee92e2d63afc18"
+  instance_type  = "t2.micro"
+  key_name       = "terra1.pem"
+  security_groups = [aws_security_group.bastion-sg.id]
+  subnet_id      = aws_subnet.pubsub0.id
+  associate_public_ip_address = true
+
+  tags = {
+    Name = "bastion-01"
+  }
+}
+
+# SG for private subnet
+
+resource "aws_security_group" "nginx-sg" {
+  name        = "T-pri-SG"
+  description = "Allow traffic to private instance"
+  vpc_id      = aws_vpc.vpc.id
+
+  ingress {
+    description = "Nginx server"
+    from_port   = 0
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks  = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description     = "ssh"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion-sg.id]
+  }
+
+  egress {
+    from_port  = 0
+    to_port    = 0
+    protocol   = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "Nginx-private"
+  }
+}
+
+# NGINX private instance
+resource "aws_instance" "nginx" {
+  ami            = "ami-0f5ee92e2d63afc18"
+  instance_type  = "t2.micro"
+  key_name       = "terra1.pem"
+  security_groups = [aws_security_group.nginx-sg.id]
+  subnet_id      = aws_subnet.prisub0.id
+  tags = {
+    Name = "nginx-01"
+  }
+}

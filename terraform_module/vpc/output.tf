@@ -1,0 +1,7 @@
+# output "vpc_id" {
+#     value = aws_vpc.vpc_one.id
+# }
+
+output "vpc_id" {
+    value = aws_vpc.vpc_one.id
+}
