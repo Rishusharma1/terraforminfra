@@ -1,15 +1,4 @@
-# module "vpc" {
-#   source   = "./vpc"
-#   vpc_cidr = var.vpc_cidr1
 
-# }
-
-# module "subnet" {
-#   source      = "./subnet"
-#   cidr_subnet = var.cidr_subnet1
-#   subnet_zone = var.subnet_zone1
-#   vpc_id      = module.vpc.vpc_id
-# }
 
 module "vpc" {
   source   = "./vpc"
@@ -69,12 +58,6 @@ module "privatesubnet" {
   vpc_id              = module.vpc.vpc_id
 }
 
-# module "instance" {
-#   source = "./publicinstance"
-#   # vpc_id      = module.vpc.vpc_id
-#   sub_id      = module.subnet.sub_id
-#   security_id = module.security.security_id
-# }
 
 module "security" {
   source = "./securitygroup"
