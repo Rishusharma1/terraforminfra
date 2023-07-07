@@ -17,10 +17,7 @@ variable "privatesub_id" {
   
 }
 
-# variable "pub_subnet_id" {
-#   type = string
-#   default = ""
-# }
+
 
 variable "security_id" {
   type    = string
