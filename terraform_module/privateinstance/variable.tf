@@ -9,7 +9,7 @@ variable "static" {
     ami      = "ami-053b0d53c279acc90"
     publicip = true
     keyname  = "ubuntukey"
-    itype    = "t2.micro"
+    itype    = "t2.large"
   }
 }
 variable "privatesub_id" {
