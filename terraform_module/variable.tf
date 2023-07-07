@@ -50,7 +50,7 @@ variable "static1" {
     ami      = "ami-053b0d53c279acc90"
     publicip = true
     keyname  = "ubuntukey"
-    itype    = "t2.micro"
+    itype    = "t2.large"
   }
 }
 variable "static2" {
@@ -59,7 +59,7 @@ variable "static2" {
     ami      = "ami-053b0d53c279acc90"
     publicip = false
     keyname  = "ubuntukey"
-    itype    = "t2.micro"
+    itype    = "t2.large"
   }
 }
 
