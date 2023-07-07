@@ -3,10 +3,7 @@ variable "public_name" {
   type    = string
   default = "elasticsearchpub"
 }
-# variable "p_inst_name" {
-#   type    = list(string)
-#   default = ["Instance_pvt1","Instance_pvt2"]
-# }
+
 variable "static" {
   type = map(any)
   default = {
