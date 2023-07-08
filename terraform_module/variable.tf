@@ -67,7 +67,7 @@ variable "static2" {
 
 variable "public_name1" {
   type    = string
-  default = "elasticsearchpub"
+  default = "elasticsearch"
 }
 variable "private_name1" {
   type    = list(string)
