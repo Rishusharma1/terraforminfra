@@ -7,7 +7,7 @@ pipeline {
         stage('git clone') {
             steps {
                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Rishusharma1/terraforminfra.git']])
-                #checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'terraforminfra', url: 'https://github.com/Rishusharma1/terraforminfra.git']])
+                
             }
         }
         stage('terraform') {
